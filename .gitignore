@@ -50,3 +50,6 @@ fabric.properties
 .clang_complete
 .gcc-flags.json
 .pio
+sdkconfig.*
+!sdkconfig.defauls
+dependencies.*

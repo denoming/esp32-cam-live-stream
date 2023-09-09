@@ -13,5 +13,5 @@ public:
     connect();
 
 private:
-    class WiFiModule* _module;
+    class WiFiImpl* _impl;
 };

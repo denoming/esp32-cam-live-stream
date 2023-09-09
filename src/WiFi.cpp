@@ -51,9 +51,9 @@ static const char* TAG = "CLS";
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
 
-class WiFiModule {
+class WiFiImpl {
 public:
-    WiFiModule()
+    WiFiImpl()
         : _eventGroup{xEventGroupCreate()}
     {
     }
@@ -197,7 +197,7 @@ private:
     static void
     eventHandler(void* arg, esp_event_base_t eventBase, int32_t eventId, void* eventData)
     {
-        auto* const self = static_cast<WiFiModule*>(arg);
+        auto* const self = static_cast<WiFiImpl*>(arg);
         assert(self != nullptr);
 
         if (eventBase == WIFI_EVENT) {
@@ -216,25 +216,25 @@ private:
 
 WiFi::WiFi()
 {
-    static WiFiModule module;
-    _module = &module;
+    static WiFiImpl impl;
+    _impl = &impl;
 }
 
 WiFi::~WiFi()
 {
-    _module = nullptr;
+    _impl = nullptr;
 }
 
 bool
 WiFi::setup()
 {
-    assert(_module);
-    return _module->setup();
+    assert(_impl != nullptr);
+    return _impl->setup();
 }
 
 bool
 WiFi::connect()
 {
-    assert(_module);
-    return _module->connect();
+    assert(_impl != nullptr);
+    return _impl->connect();
 }

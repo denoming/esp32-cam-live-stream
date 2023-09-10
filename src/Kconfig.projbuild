@@ -285,7 +285,7 @@ menu "Camera live stream options"
             config CLS_CAM_GRAB_MODE_WHEN_EMPTY
                 bool "When empty"
                 help
-                    Fills buffers when they are empty. Less resources but first CLS_CAM_FB_COUNT frames might be old.
+                    Fills camera buffers when they are empty. Less resources but first CLS_CAM_FB_COUNT frames might be old.
             config CLS_CAM_GRAB_MODE_LATEST
                 bool "Latest"
                 help
@@ -297,51 +297,83 @@ menu "Camera live stream options"
             config CLS_CAM_PIN_PWDN
                 int "Pin PWDN value"
                 default 32
+                help
+                    The pin number for the power-down pin of the camera.
             config CLS_CAM_PIN_RESET
                 int "Pin RESET value"
                 default -1
+                help
+                    The pin number for the reset pin of the camera.
             config CLS_CAM_PIN_XCLK
                 int "Pin XCLK value"
                 default 0
+                help
+                    The pin number for the clock pin of the camera.
             config CLS_CAM_PIN_SIOD
                 int "Pin SIOD value"
                 default 26
+                help
+                    The pin numbers for the SCCB (I2C-like) data and clock pins of the camera.
             config CLS_CAM_PIN_SIOC
                 int "Pin SIOC value"
                 default 27
+                help
+                    The pin numbers for the SCCB (I2C-like) data and clock pins of the camera.
             config CLS_CAM_PIN_D7
                 int "Pin D7 value"
                 default 35
+                help
+                    The pin numbers for the data pin D7 of the camera.
             config CLS_CAM_PIN_D6
                 int "Pin D6 value"
                 default 34
+                help
+                    The pin numbers for the data pin D6 of the camera.
             config CLS_CAM_PIN_D5
                 int "Pin D5 value"
                 default 39
+                help
+                    The pin numbers for the data pin D5 of the camera.
             config CLS_CAM_PIN_D4
                 int "Pin D4 value"
                 default 36
+                help
+                    The pin numbers for the data pin D4 of the camera.
             config CLS_CAM_PIN_D3
                 int "Pin D3 value"
                 default 21
+                help
+                    The pin numbers for the data pin D3 of the camera.
             config CLS_CAM_PIN_D2
                 int "Pin D2 value"
                 default 19
+                help
+                    The pin numbers for the data pin D2 of the camera.
             config CLS_CAM_PIN_D1
                 int "Pin D1 value"
                 default 18
+                help
+                    The pin numbers for the data pin D1 of the camera.
             config CLS_CAM_PIN_D0
                 int "Pin D0 value"
                 default 5
+                help
+                    The pin numbers for the data pin D0 of the camera.
             config CLS_CAM_PIN_VSYNC
                 int "Pin VSYNC value"
                 default 25
+                help
+                    The pin numbers for the vertical sync pin of the camera.
             config CLS_CAM_PIN_HREF
                 int "Pin HREF value"
                 default 23
+                help
+                    The pin numbers for the horizontal reference pin of the camera.
             config CLS_CAM_PIN_PCLK
                 int "Pin PCLK value"
                 default 22
+                help
+                    The pin numbers for the pixel clock pin of the camera.
         endmenu # Pin config
 
     endmenu # Video camera menu

@@ -39,12 +39,12 @@ public:
             rv = nvs_flash_init();
         }
         if (rv != ESP_OK) {
-            ESP_LOGE(TAG, "Unable to initialize NVS flash");
+            ESP_LOGE(TAG, "Unable to initialise NVS flash memory");
             return false;
         }
 
         if (esp_netif_init() != ESP_OK) {
-            ESP_LOGE(TAG, "Unable to initialize network interface");
+            ESP_LOGE(TAG, "Unable to initialise network interface");
             return false;
         }
 
@@ -58,7 +58,7 @@ public:
 
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         if (esp_wifi_init(&cfg) != ESP_OK) {
-            ESP_LOGE(TAG, "Unable to initialize WiFi");
+            ESP_LOGE(TAG, "Unable to initialise WiFi");
             esp_netif_destroy_default_wifi(netIf);
             return false;
         }

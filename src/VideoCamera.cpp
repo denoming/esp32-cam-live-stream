@@ -42,12 +42,15 @@ public:
         };
 
         if (esp_camera_init(&cameraConfig) != ESP_OK) {
-            ESP_LOGE(TAG, "Unable to initialize camera");
+            ESP_LOGE(TAG, "Unable to initialise camera");
             return false;
         }
 
         return true;
     }
+
+
+
 };
 
 VideoCamera::VideoCamera()

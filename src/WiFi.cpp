@@ -1,47 +1,19 @@
 #include "WiFi.hpp"
 
-#include <nvs_flash.h>
+#include "Config.hpp"
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/event_groups.h>
+
+#include <nvs_flash.h>
 #include <esp_wifi.h>
 #include <esp_event.h>
 #include <esp_log.h>
 #include <esp_assert.h>
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/event_groups.h>
-
 #include <functional>
 
 static const char* TAG = "CLS";
-
-#if CONFIG_CLS_ESP_WPA3_SAE_PWE_HUNT_AND_PECK
-#define CLS_ESP_WIFI_SAE_MODE WPA3_SAE_PWE_HUNT_AND_PECK
-#define CLS_H2E_IDENTIFIER ""
-#elif CONFIG_CLS_ESP_WPA3_SAE_PWE_HASH_TO_ELEMENT
-#define CLS_ESP_WIFI_SAE_MODE WPA3_SAE_PWE_HASH_TO_ELEMENT
-#define CLS_H2E_IDENTIFIER CONFIG_CLS_ESP_WIFI_PW_ID
-#elif CONFIG_CLS_ESP_WPA3_SAE_PWE_BOTH
-#define CLS_ESP_WIFI_SAE_MODE WPA3_SAE_PWE_BOTH
-#define CLS_H2E_IDENTIFIER CONFIG_CLS_ESP_WIFI_PW_ID
-#endif
-
-#if CONFIG_CLS_ESP_WIFI_AUTH_OPEN
-#define CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_OPEN
-#elif CONFIG_CLS_ESP_WIFI_AUTH_WEP
-#define CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WEP
-#elif CONFIG_CLS_ESP_WIFI_AUTH_WPA_PSK
-#define CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA_PSK
-#elif CONFIG_CLS_ESP_WIFI_AUTH_WPA2_PSK
-#define CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA2_PSK
-#elif CONFIG_CLS_ESP_WIFI_AUTH_WPA_WPA2_PSK
-#define CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA_WPA2_PSK
-#elif CONFIG_CLS_ESP_WIFI_AUTH_WPA3_PSK
-#define CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA3_PSK
-#elif CONFIG_CLS_ESP_WIFI_AUTH_WPA2_WPA3_PSK
-#define CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA2_WPA3_PSK
-#elif CONFIG_CLS_ESP_WIFI_AUTH_WAPI_PSK
-#define CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WAPI_PSK
-#endif
 
 /**
  * The event group allows multiple bits for each event, but we only care about two events:
@@ -108,13 +80,13 @@ public:
 
         wifi_config_t wifiConfig = {
                     .sta = {
-                        .ssid = CONFIG_CLS_ESP_WIFI_SSID,
-                        .password = CONFIG_CLS_ESP_WIFI_PASSWORD,
+                        .ssid = CLS_WIFI_SSID,
+                        .password = CLS_WIFI_PASSWORD,
                         .threshold = {
-                            .authmode = CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD
+                            .authmode = CLS_WIFI_SCAN_AUTH_MODE_THRESHOLD
                         },
-                        .sae_pwe_h2e = CLS_ESP_WIFI_SAE_MODE,
-                        .sae_h2e_identifier = CLS_H2E_IDENTIFIER,
+                        .sae_pwe_h2e = CLS_WIFI_SAE_MODE,
+                        .sae_h2e_identifier = CLS_WIFI_H2E_IDENTIFIER,
                     },
                 };
 
@@ -139,7 +111,7 @@ public:
             return false;
         }
 
-        ESP_LOGI(TAG, "Connect to AP SSID: %s", CONFIG_CLS_ESP_WIFI_SSID);
+        ESP_LOGI(TAG, "Connect to AP SSID: %s", CLS_WIFI_SSID);
 
         /**
          * Waiting until
@@ -149,11 +121,11 @@ public:
         EventBits_t bits = xEventGroupWaitBits(
             _eventGroup, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
         if (bits & WIFI_CONNECTED_BIT) {
-            ESP_LOGI(TAG, "Connected to AP SSID: %s", CONFIG_CLS_ESP_WIFI_SSID);
+            ESP_LOGI(TAG, "Connected to AP SSID: %s", CLS_WIFI_SSID);
             return true;
         }
         if (bits & WIFI_FAIL_BIT) {
-            ESP_LOGI(TAG, "Unable to connect to SSID: %s", CONFIG_CLS_ESP_WIFI_SSID);
+            ESP_LOGI(TAG, "Unable to connect to SSID: %s", CLS_WIFI_SSID);
             return true;
         }
 
@@ -170,7 +142,7 @@ private:
             esp_wifi_connect();
             break;
         case WIFI_EVENT_STA_DISCONNECTED:
-            if (_retryCnt < CONFIG_CLS_ESP_MAXIMUM_RETRY) {
+            if (_retryCnt < CLS_MAXIMUM_RETRY) {
                 esp_wifi_connect();
                 _retryCnt++;
                 ESP_LOGI(TAG, "Retry to connect to the AP");

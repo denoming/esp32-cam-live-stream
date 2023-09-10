@@ -1,67 +1,349 @@
 menu "Camera live stream options"
 
-    config CLS_ESP_WIFI_SSID
-        string "WiFi SSID"
-        default "myssid"
-        help
-            SSID (network name) to connect to.
+    # WiFi menu
+    menu "WiFi options"
+        config CLS_WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID (network name) to connect to.
 
-    config CLS_ESP_WIFI_PASSWORD
-        string "WiFi Password"
-        default "mypassword"
-        help
-            WiFi password (WPA or WPA2) to use.
+        config CLS_WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                WiFi password (WPA or WPA2) to use.
 
-    choice CLS_ESP_WIFI_SAE_MODE
-        prompt "WPA3 SAE mode selection"
-        default CLS_ESP_WPA3_SAE_PWE_BOTH
-        help
-            Select mode for SAE as Hunt and Peck, H2E or both.
-        config CLS_ESP_WPA3_SAE_PWE_HUNT_AND_PECK
-            bool "HUNT AND PECK"
-        config CLS_ESP_WPA3_SAE_PWE_HASH_TO_ELEMENT
-            bool "H2E"
-        config CLS_ESP_WPA3_SAE_PWE_BOTH
-            bool "BOTH"
-    endchoice
+        choice CLS_WIFI_SAE_MODE
+            prompt "WPA3 SAE mode selection"
+            default CLS_WIFI_WPA3_SAE_PWE_BOTH
+            help
+                Select mode for SAE as Hunt and Peck, H2E or both.
+            config CLS_WIFI_WPA3_SAE_PWE_HUNT_AND_PECK
+                bool "HUNT AND PECK"
+            config CLS_WIFI_WPA3_SAE_PWE_HASH_TO_ELEMENT
+                bool "H2E"
+            config CLS_WIFI_WPA3_SAE_PWE_BOTH
+                bool "BOTH"
+        endchoice
 
-    config CLS_ESP_WIFI_PW_ID
-        string "PASSWORD IDENTIFIER"
-        depends on  CLS_ESP_WPA3_SAE_PWE_HASH_TO_ELEMENT || CLS_ESP_WPA3_SAE_PWE_BOTH
-        default ""
-        help
-            password identifier for SAE H2E
+        config CLS_WIFI_PW_ID
+            string "PASSWORD IDENTIFIER"
+            depends on  CLS_WIFI_WPA3_SAE_PWE_HASH_TO_ELEMENT || CLS_WIFI_WPA3_SAE_PWE_BOTH
+            default ""
+            help
+                password identifier for SAE H2E
 
-    config CLS_ESP_MAXIMUM_RETRY
-        int "Maximum retry"
-        default 5
-        help
-            Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+        config CLS_MAXIMUM_RETRY
+            int "Maximum retry"
+            default 5
+            help
+                Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
 
-    choice CLS_ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD
-        prompt "WiFi Scan auth mode threshold"
-        default CLS_ESP_WIFI_AUTH_WPA2_PSK
-        help
-            The weakest authmode to accept in the scan mode.
-            This value defaults to ESP_WIFI_AUTH_WPA2_PSK incase password is present and ESP_WIFI_AUTH_OPEN is used.
-            Please select ESP_WIFI_AUTH_WEP/ESP_WIFI_AUTH_WPA_PSK incase AP is operating in WEP/WPA mode.
+        choice CLS_WIFI_SCAN_AUTH_MODE_THRESHOLD
+            prompt "WiFi Scan auth mode threshold"
+            default CLS_WIFI_AUTH_WPA2_PSK
+            help
+                The weakest authmode to accept in the scan mode.
+                This value defaults to ESP_WIFI_AUTH_WPA2_PSK incase password is present and ESP_WIFI_AUTH_OPEN is used.
+                Please select ESP_WIFI_AUTH_WEP/ESP_WIFI_AUTH_WPA_PSK incase AP is operating in WEP/WPA mode.
 
-        config CLS_ESP_WIFI_AUTH_OPEN
-            bool "OPEN"
-        config CLS_ESP_WIFI_AUTH_WEP
-            bool "WEP"
-        config CLS_ESP_WIFI_AUTH_WPA_PSK
-            bool "WPA PSK"
-        config CLS_ESP_WIFI_AUTH_WPA2_PSK
-            bool "WPA2 PSK"
-        config CLS_ESP_WIFI_AUTH_WPA_WPA2_PSK
-            bool "WPA/WPA2 PSK"
-        config CLS_ESP_WIFI_AUTH_WPA3_PSK
-            bool "WPA3 PSK"
-        config CLS_ESP_WIFI_AUTH_WPA2_WPA3_PSK
-            bool "WPA2/WPA3 PSK"
-        config CLS_ESP_WIFI_AUTH_WAPI_PSK
-            bool "WAPI PSK"
-    endchoice
+            config CLS_WIFI_AUTH_OPEN
+                bool "OPEN"
+            config CLS_WIFI_AUTH_WEP
+                bool "WEP"
+            config CLS_WIFI_AUTH_WPA_PSK
+                bool "WPA PSK"
+            config CLS_WIFI_AUTH_WPA2_PSK
+                bool "WPA2 PSK"
+            config CLS_WIFI_AUTH_WPA_WPA2_PSK
+                bool "WPA/WPA2 PSK"
+            config CLS_WIFI_AUTH_WPA3_PSK
+                bool "WPA3 PSK"
+            config CLS_WIFI_AUTH_WPA2_WPA3_PSK
+                bool "WPA2/WPA3 PSK"
+            config CLS_WIFI_AUTH_WAPI_PSK
+                bool "WAPI PSK"
+        endchoice
+    endmenu # WiFi menu
+
+    # Video camera menu
+    menu "Video camera options"
+
+        config CLS_CAM_XCLK_FREQ_HZ
+            int "Frequency of XCLK signal"
+            default 20000000
+            help
+                Frequency of XCLK signal, in Hz. EXPERIMENTAL: Set to 16MHz on ESP32-S2 or ESP32-S3 to enable EDMA mode
+
+        choice CLS_CAM_LEDC_TIMER
+            prompt "LEDC timer"
+            default CLS_CAM_LEDC_TIMER_0
+            help
+                LEDC timer to be used for generating XCLK
+            config CLS_CAM_LEDC_TIMER_0
+                bool "LEDC_TIMER_0"
+            config CLS_CAM_LEDC_TIMER_1
+                bool "LEDC_TIMER_1"
+            config CLS_CAM_LEDC_TIMER_2
+                bool "LEDC_TIMER_2"
+            config CLS_CAM_LEDC_TIMER_3
+                bool "LEDC_TIMER_3"
+        endchoice
+
+        choice CLS_CAM_LEDC_CHANNEL
+            prompt "LEDC channel"
+            default CLS_CAM_LEDC_CHANNEL_0
+            help
+                LEDC channel to be used for generating XCLK
+            config CLS_CAM_LEDC_CHANNEL_0
+                bool "LEDC_CHANNEL_0"
+            config CLS_CAM_LEDC_CHANNEL_1
+                bool "LEDC_CHANNEL_1"
+            config CLS_CAM_LEDC_CHANNEL_2
+                bool "LEDC_CHANNEL_2"
+            config CLS_CAM_LEDC_CHANNEL_3
+                bool "LEDC_CHANNEL_3"
+            config CLS_CAM_LEDC_CHANNEL_4
+                bool "LEDC_CHANNEL_4"
+            config CLS_CAM_LEDC_CHANNEL_5
+                bool "LEDC_CHANNEL_5"
+        endchoice
+
+        choice CLS_CAM_PIXEL_FORMAT
+            prompt "Pixel format"
+            default CLS_CAM_PIXEL_FORMAT_RGB565
+            help
+                Format of the pixel data
+            config CLS_CAM_PIXEL_FORMAT_RGB565
+                bool "RGB565"
+                help
+                    2BPP/RGB565
+            config CLS_CAM_PIXEL_FORMAT_YUV422
+                bool "YUV422"
+                help
+                    2BPP/YUV422
+            config CLS_CAM_PIXEL_FORMAT_YUV420
+                bool "YUV420"
+                help
+                    1.5BPP/YUV420
+            config CLS_CAM_PIXEL_FORMAT_GRAYSCALE
+                bool "GRAYSCALE"
+                help
+                    1BPP/Grayscale
+            config CLS_CAM_PIXEL_FORMAT_JPEG
+                bool "JPEG"
+                help
+                    JPEG/Compressed
+            config CLS_CAM_PIXEL_FORMAT_RGB888
+                bool "RGB888"
+                help
+                    3BPP/RGB888
+            config CLS_CAM_PIXEL_FORMAT_RAW
+                bool "RAW"
+                help
+                    RAW
+            config CLS_CAM_PIXEL_FORMAT_RGB444
+                bool "RGB444"
+                help
+                    3BP2P/RGB444
+            config CLS_CAM_PIXEL_FORMAT_RGB555
+                bool "RGB555"
+                help
+                    3BP2P/RGB555
+        endchoice
+
+        choice CLS_CAM_FRAME_SIZE
+            prompt "Frame size"
+            default CLS_CAM_FRAME_SIZE_QVGA
+            help
+                Size of the output image
+            config CLS_CAM_FRAME_SIZE_96X96
+                bool "96X96"
+                help
+                    96x96
+            config CLS_CAM_FRAME_SIZE_QQVGA
+                bool "QQVGA"
+                help
+                    160x120
+            config CLS_CAM_FRAME_SIZE_QCIF
+                bool "QCIF"
+                help
+                    176x144
+            config CLS_CAM_FRAME_SIZE_HQVGA
+                bool "HQVGA"
+                help
+                    240x176
+            config CLS_CAM_FRAME_SIZE_240X240
+                bool "240X240"
+                help
+                    240x240
+            config CLS_CAM_FRAME_SIZE_QVGA
+                bool "QVGA"
+                help
+                    320x240
+            config CLS_CAM_FRAME_SIZE_CIF
+                bool "CIF"
+                help
+                    400x296
+            config CLS_CAM_FRAME_SIZE_HVGA
+                bool "HVGA"
+                help
+                    480x320
+            config CLS_CAM_FRAME_SIZE_VGA
+                bool "VGA"
+                help
+                    640x480
+            config CLS_CAM_FRAME_SIZE_SVGA
+                bool "SVGA"
+                help
+                    800x600
+            config CLS_CAM_FRAME_SIZE_XGA
+                bool "XGA"
+                help
+                    1024x768
+            config CLS_CAM_FRAME_SIZE_HD
+                bool "HD"
+                help
+                    1280x720
+            config CLS_CAM_FRAME_SIZE_SXGA
+                bool "SXGA"
+                help
+                    1280x1024
+            config CLS_CAM_FRAME_SIZE_UXGA
+                bool "UXGA"
+                help
+                    1600x1200
+            config CLS_CAM_FRAME_SIZE_FHD
+                bool "FHD"
+                help
+                    1920x1080 (3MP Sensors)
+            config CLS_CAM_FRAME_SIZE_P_HD
+                bool "P_HD"
+                help
+                    720x1280 (3MP Sensors)
+            config CLS_CAM_FRAME_SIZE_P_3MP
+                bool "P_3MP"
+                help
+                    864x1536 (3MP Sensors)
+            config CLS_CAM_FRAME_SIZE_QXGA
+                bool "QXGA"
+                help
+                    2048x1536 (3MP Sensors)
+            config CLS_CAM_FRAME_SIZE_QHD
+                bool "QHD"
+                help
+                    2560x1440 (5MP Sensors)
+            config CLS_CAM_FRAME_SIZE_WQXGA
+                bool "WQXGA"
+                help
+                    2560x1600 (5MP Sensors)
+            config CLS_CAM_FRAME_SIZE_P_FHD
+                bool "P_FHD"
+                help
+                    1080x1920 (5MP Sensors)
+            config CLS_CAM_FRAME_SIZE_QSXGA
+                bool "QSXGA"
+                help
+                    2560x1920 (5MP Sensors)
+        endchoice
+
+        config CLS_CAM_JPEG_QUALITY
+            int "JPEG quality"
+            range 0 63
+            default 12
+            help
+                Quality of JPEG output. 0-63 lower means higher quality.
+
+        config CLS_CAM_FB_COUNT
+            int "Number of frame buffers to allocate"
+            default 1
+            help
+                Number of frame buffers to be allocated. If more than one,
+                then each frame will be acquired (double speed)
+
+        choice CLS_CAM_FB_LOCATION
+            prompt "Frame buffer location"
+            default CLS_CAM_FB_LOCATION_PSRAM
+            help
+                The location of Frame buffer
+            config CLS_CAM_FB_LOCATION_PSRAM
+                bool "PSRAM"
+                help
+                    Frame buffer is placed in external PSRAM
+            config CLS_CAM_FB_LOCATION_DRAM
+                bool "DRAM"
+                help
+                    Frame buffer is placed in internal DRAM
+        endchoice
+
+        choice CLS_CAM_GRAB_MODE
+            prompt "Grab mode"
+            default CLS_CAM_GRAB_MODE_WHEN_EMPTY
+            help
+                Grab mode of buffers
+            config CLS_CAM_GRAB_MODE_WHEN_EMPTY
+                bool "When empty"
+                help
+                    Fills buffers when they are empty. Less resources but first CLS_CAM_FB_COUNT frames might be old.
+            config CLS_CAM_GRAB_MODE_LATEST
+                bool "Latest"
+                help
+                    Except when 1 frame buffer is used, queue will always contain the last CLS_CAM_FB_COUNT frames.
+        endchoice
+
+        # Pin config
+        menu "Pins config"
+            config CLS_CAM_PIN_PWDN
+                int "Pin PWDN value"
+                default 32
+            config CLS_CAM_PIN_RESET
+                int "Pin RESET value"
+                default -1
+            config CLS_CAM_PIN_XCLK
+                int "Pin XCLK value"
+                default 0
+            config CLS_CAM_PIN_SIOD
+                int "Pin SIOD value"
+                default 26
+            config CLS_CAM_PIN_SIOC
+                int "Pin SIOC value"
+                default 27
+            config CLS_CAM_PIN_D7
+                int "Pin D7 value"
+                default 35
+            config CLS_CAM_PIN_D6
+                int "Pin D6 value"
+                default 34
+            config CLS_CAM_PIN_D5
+                int "Pin D5 value"
+                default 39
+            config CLS_CAM_PIN_D4
+                int "Pin D4 value"
+                default 36
+            config CLS_CAM_PIN_D3
+                int "Pin D3 value"
+                default 21
+            config CLS_CAM_PIN_D2
+                int "Pin D2 value"
+                default 19
+            config CLS_CAM_PIN_D1
+                int "Pin D1 value"
+                default 18
+            config CLS_CAM_PIN_D0
+                int "Pin D0 value"
+                default 5
+            config CLS_CAM_PIN_VSYNC
+                int "Pin VSYNC value"
+                default 25
+            config CLS_CAM_PIN_HREF
+                int "Pin HREF value"
+                default 23
+            config CLS_CAM_PIN_PCLK
+                int "Pin PCLK value"
+                default 22
+        endmenu # Pin config
+
+    endmenu # Video camera menu
 
 endmenu

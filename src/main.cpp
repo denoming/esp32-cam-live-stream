@@ -3,6 +3,9 @@
 #include "WiFi.hpp"
 #include "VideoCamera.hpp"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 static const char* TAG = "CLS";
 
 static WiFi wifi;
@@ -22,9 +25,20 @@ app_main(void)
         ESP_LOGE(TAG, "Unable to connect to WiFi AP: %s", CONFIG_CLS_WIFI_SSID);
     }
 
-    if (videoCamera.setup()) {
-        ESP_LOGI(TAG, "Video camera has been initialized");
-    } else {
+    if (not videoCamera.setup()) {
         ESP_LOGE(TAG, "Unable to initialize video camera");
+        return;
+    }
+
+    if (videoCamera.ready()) {
+        while (true) {
+            if (videoCamera.capture()) {
+                auto frame = videoCamera.frame();
+                ESP_LOGI(TAG, "Picture taken! Its size was: %zu bytes", frame.size());
+            } else {
+                break;
+            };
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
     }
 }

@@ -6,13 +6,32 @@
 #include <esp_camera.h>
 #include <esp_log.h>
 
+#include <span>
+
 static const char* TAG = "CLS";
 
-class VideoCameraImpl {
+class VideoCamera::Impl {
 public:
+    [[nodiscard]] bool
+    ready()
+    {
+        return _ready;
+    }
+
+    [[nodiscard]] bool
+    captured()
+    {
+        return (_frameBuffer != nullptr);
+    }
+
     bool
     setup()
     {
+        if (_ready) {
+            ESP_LOGW(TAG, "Camera is already setup");
+            return true;
+        }
+
         camera_config_t cameraConfig = {
             .pin_pwdn = CLS_CAM_PIN_PWDN,
             .pin_reset = CLS_CAM_PIN_RESET,
@@ -42,20 +61,49 @@ public:
         };
 
         if (esp_camera_init(&cameraConfig) != ESP_OK) {
-            ESP_LOGE(TAG, "Unable to initialise camera");
+            _ready = false;
             return false;
+        } else {
+            _ready = true;
+            return true;
         }
-
-        return true;
     }
 
+    void
+    tearDown()
+    {
+        if (_ready) {
+            if (esp_camera_deinit() != ESP_OK) {
+                ESP_LOGE(TAG, "Unable to de-initialise video camera");
+            }
+        }
+    }
 
+    bool
+    capture()
+    {
+        if (_frameBuffer != nullptr) {
+            esp_camera_fb_return(_frameBuffer);
+        }
+        _frameBuffer = esp_camera_fb_get();
+        return captured();
+    }
 
+    const camera_fb_t&
+    buffer()
+    {
+        assert(_frameBuffer != nullptr);
+        return *_frameBuffer;
+    }
+
+private:
+    bool _ready{};
+    camera_fb_t* _frameBuffer{};
 };
 
 VideoCamera::VideoCamera()
 {
-    static VideoCameraImpl impl;
+    static Impl impl;
     _impl = &impl;
 }
 
@@ -65,8 +113,65 @@ VideoCamera::~VideoCamera()
 }
 
 bool
+VideoCamera::ready()
+{
+    assert(_impl != nullptr);
+    return _impl->ready();
+}
+
+bool
+VideoCamera::captured()
+{
+    assert(_impl != nullptr);
+    return _impl->captured();
+}
+
+bool
 VideoCamera::setup()
 {
     assert(_impl != nullptr);
     return _impl->setup();
+}
+
+void
+VideoCamera::tearDown()
+{
+    assert(_impl != nullptr);
+    return _impl->tearDown();
+}
+
+bool
+VideoCamera::capture()
+{
+    assert(_impl != nullptr);
+    return _impl->capture();
+}
+
+std::span<uint8_t>
+VideoCamera::frame()
+{
+    assert(_impl != nullptr && _impl->captured());
+    const auto& buffer = _impl->buffer();
+    return {buffer.buf, buffer.len};
+}
+
+size_t
+VideoCamera::frameWidth() const
+{
+    assert(_impl != nullptr && _impl->captured());
+    return _impl->buffer().width;
+}
+
+size_t
+VideoCamera::frameHeight() const
+{
+    assert(_impl != nullptr && _impl->captured());
+    return _impl->buffer().height;
+}
+
+PictureFormat
+VideoCamera::frameFormat() const
+{
+    assert(_impl != nullptr && _impl->captured());
+    return static_cast<PictureFormat>(_impl->buffer().format);
 }

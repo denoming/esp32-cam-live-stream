@@ -112,7 +112,7 @@ menu "Camera live stream options"
 
         choice CLS_CAM_PIXEL_FORMAT
             prompt "Pixel format"
-            default CLS_CAM_PIXEL_FORMAT_RGB565
+            default CLS_CAM_PIXEL_FORMAT_JPEG
             help
                 Format of the pixel data
             config CLS_CAM_PIXEL_FORMAT_RGB565
@@ -155,7 +155,7 @@ menu "Camera live stream options"
 
         choice CLS_CAM_FRAME_SIZE
             prompt "Frame size"
-            default CLS_CAM_FRAME_SIZE_QVGA
+            default CLS_CAM_FRAME_SIZE_VGA
             help
                 Size of the output image
             config CLS_CAM_FRAME_SIZE_96X96

@@ -155,7 +155,7 @@ menu "Camera live stream options"
 
         choice CLS_CAM_FRAME_SIZE
             prompt "Frame size"
-            default CLS_CAM_FRAME_SIZE_VGA
+            default CLS_CAM_FRAME_SIZE_QVGA
             help
                 Size of the output image
             config CLS_CAM_FRAME_SIZE_96X96
@@ -257,7 +257,7 @@ menu "Camera live stream options"
 
         config CLS_CAM_FB_COUNT
             int "Number of frame buffers to allocate"
-            default 1
+            default 2
             help
                 Number of frame buffers to be allocated. If more than one,
                 then each frame will be acquired (double speed)
@@ -279,7 +279,7 @@ menu "Camera live stream options"
 
         choice CLS_CAM_GRAB_MODE
             prompt "Grab mode"
-            default CLS_CAM_GRAB_MODE_WHEN_EMPTY
+            default CLS_CAM_GRAB_MODE_LATEST
             help
                 Grab mode of buffers
             config CLS_CAM_GRAB_MODE_WHEN_EMPTY

@@ -1,15 +1,12 @@
 #include <esp_log.h>
 
 #include "WiFi.hpp"
-#include "VideoCamera.hpp"
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "LiveStreamer.hpp"
 
 static const char* TAG = "CLS";
 
 static WiFi wifi;
-static VideoCamera videoCamera;
+static LiveStreamer streamer;
 
 extern "C" void
 app_main(void)
@@ -25,20 +22,12 @@ app_main(void)
         ESP_LOGE(TAG, "Unable to connect to WiFi AP: %s", CONFIG_CLS_WIFI_SSID);
     }
 
-    if (not videoCamera.setup()) {
-        ESP_LOGE(TAG, "Unable to initialize video camera");
+    if (not streamer.setup()) {
+        ESP_LOGE(TAG, "Unable to initialise live streamer");
         return;
     }
 
-    if (videoCamera.ready()) {
-        while (true) {
-            if (videoCamera.capture()) {
-                auto frame = videoCamera.frame();
-                ESP_LOGI(TAG, "Picture taken! Its size was: %zu bytes", frame.size());
-            } else {
-                break;
-            };
-            vTaskDelay(pdMS_TO_TICKS(2000));
-        }
+    if (not streamer.start()) {
+        ESP_LOGE(TAG, "Unable to start live streamer");
     }
 }

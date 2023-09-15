@@ -114,7 +114,7 @@ menu "Camera live stream options"
             prompt "Pixel format"
             default CLS_CAM_PIXEL_FORMAT_JPEG
             help
-                Format of the pixel data
+                Format of the pixel data, the JPEG should be preferred
             config CLS_CAM_PIXEL_FORMAT_RGB565
                 bool "RGB565"
                 help
@@ -157,7 +157,7 @@ menu "Camera live stream options"
             prompt "Frame size"
             default CLS_CAM_FRAME_SIZE_QVGA
             help
-                Size of the output image
+                Size of the output image (depends on used camera module)
             config CLS_CAM_FRAME_SIZE_96X96
                 bool "96X96"
                 help
@@ -251,7 +251,7 @@ menu "Camera live stream options"
         config CLS_CAM_JPEG_QUALITY
             int "JPEG quality"
             range 0 63
-            default 12
+            default 30
             help
                 Quality of JPEG output. 0-63 lower means higher quality.
 
@@ -281,7 +281,7 @@ menu "Camera live stream options"
             prompt "Grab mode"
             default CLS_CAM_GRAB_MODE_LATEST
             help
-                Grab mode of buffers
+                Grab mode of buffers (latest mode should be used if number of frames is more than 1)
             config CLS_CAM_GRAB_MODE_WHEN_EMPTY
                 bool "When empty"
                 help

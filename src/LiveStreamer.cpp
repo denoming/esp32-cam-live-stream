@@ -10,6 +10,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
+#include <freertos/task.h>
 
 #include <span>
 #include <array>
@@ -26,13 +27,14 @@ class LiveStreamer::Impl {
 public:
     ~Impl()
     {
-        deleteCaptureQueue();
+        stopCaptureFrames();
+        deleteFramesQueue();
     }
 
     bool
     setup()
     {
-        if (not createCaptureQueue()) {
+        if (not createFrameQueue()) {
             ESP_LOGE(TAG, "Unable setup capture queue");
             return false;
         }
@@ -49,20 +51,26 @@ public:
     start(uint16_t port)
     {
         if (not startStreamServer(port)) {
-            ESP_LOGE(TAG, "Unable to start stream server");
+            ESP_LOGE(TAG, "Unable to start stream server handler");
             return false;
         }
 
-        startCaptureFrames();
+        if (not startCaptureFrames()) {
+            ESP_LOGE(TAG, "Unable to start capture frame handler");
+            return false;
+        }
+
+        return true;
     }
 
 private:
     bool
-    createCaptureQueue()
+    createFrameQueue()
     {
+        assert(_queueHandle == QueueHandle_t{});
         ESP_LOGD(TAG, "Create capture queue with <%d> size", CLS_CAM_FB_COUNT);
-        _queue = xQueueCreate(CLS_CAM_FB_COUNT, sizeof(camera_fb_t*));
-        if (_queue == nullptr) {
+        _queueHandle = xQueueCreate(CLS_CAM_FB_COUNT, sizeof(camera_fb_t*));
+        if (_queueHandle == nullptr) {
             ESP_LOGE(TAG, "Unable create capture queue");
             return false;
         }
@@ -70,10 +78,51 @@ private:
     }
 
     void
-    deleteCaptureQueue()
+    deleteFramesQueue()
     {
-        if (_queue) {
-            vQueueDelete(_queue);
+        if (_queueHandle) {
+            vQueueDelete(_queueHandle);
+            _queueHandle = {};
+        }
+    }
+
+    camera_fb_t*
+    popFrame()
+    {
+        camera_fb_t* frame{};
+        xQueueReceive(_queueHandle, &frame, portMAX_DELAY);
+        return frame;
+    }
+
+    void
+    pushFrame(camera_fb_t* frame)
+    {
+        xQueueSend(_queueHandle, &frame, portMAX_DELAY);
+    }
+
+    bool
+    startCaptureFrames()
+    {
+        static const uint32_t kStackSize{4096};
+
+        assert(_captureHandle == TaskHandle_t{});
+        return (xTaskCreatePinnedToCore(&staticCaptureFrameHandler,
+                                        "CAPTURE",
+                                        kStackSize,
+                                        this,
+
+                                        tskIDLE_PRIORITY + 1,
+                                        &_captureHandle,
+                                        0)
+                == pdPASS);
+    }
+
+    void
+    stopCaptureFrames()
+    {
+        if (_captureHandle) {
+            vTaskDelete(_captureHandle);
+            _captureHandle = {};
         }
     }
 
@@ -86,36 +135,24 @@ private:
         httpd_uri_t streamUri = {
             .uri = "/stream",
             .method = HTTP_GET,
-            .handler = streamRequestHandler,
+            .handler = staticStreamServerHandler,
             .user_ctx = this,
         };
 
         ESP_LOGD(TAG, "Starting HTTP server on <%d> port", port);
-        esp_err_t error = httpd_start(&_httpd, &config);
+        esp_err_t error = httpd_start(&_streamHandle, &config);
         if (error != ESP_OK) {
             ESP_LOGE(TAG, "Unable to start HTTPd server: <%s>", esp_err_to_name(error));
             return false;
         }
 
-        error = httpd_register_uri_handler(_httpd, &streamUri);
+        error = httpd_register_uri_handler(_streamHandle, &streamUri);
         if (error != ESP_OK) {
             ESP_LOGE(TAG, "Unable to register HTTPd handler: <%s>", esp_err_to_name(error));
             return false;
         }
 
         return true;
-    }
-
-    [[noreturn]] void
-    startCaptureFrames()
-    {
-        camera_fb_t* frame{};
-        while (true) {
-            frame = esp_camera_fb_get();
-            if (frame) {
-                xQueueSend(_queue, &frame, portMAX_DELAY);
-            }
-        }
     }
 
     esp_err_t
@@ -130,14 +167,12 @@ private:
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
         httpd_resp_set_hdr(req, "X-Framerate", "60");
 
-        camera_fb_t* frame{};
         std::array<char, 128> buffer = {};
         while (true) {
-            if (xQueueReceive(_queue, &frame, portMAX_DELAY) == pdTRUE) {
-                error = sendResponse(req, frame, buffer);
+            if (camera_fb_t* frame = popFrame(); frame != nullptr) {
+                error = sendStreamResponse(req, frame, buffer);
                 esp_camera_fb_return(frame);
-                if (error != ESP_OK and error != ESP_ERR_HTTPD_RESP_SEND) {
-                    ESP_LOGE(TAG, "Unable to handle HTTP request: <%s>", esp_err_to_name(error));
+                if (error != ESP_OK) {
                     break;
                 }
             }
@@ -147,7 +182,7 @@ private:
     }
 
     static esp_err_t
-    sendResponse(httpd_req_t* req, camera_fb_t* frame, std::span<char> buffer)
+    sendStreamResponse(httpd_req_t* req, camera_fb_t* frame, std::span<char> buffer)
     {
         // Prepare JPEG picture
         uint8_t* jpeg{};
@@ -188,12 +223,15 @@ private:
         return error;
     }
 
-    static esp_err_t
-    streamRequestHandler(httpd_req_t* req)
+    [[noreturn]] void
+    captureFrameHandler()
     {
-        Impl* self = static_cast<Impl*>(req->user_ctx);
-        assert(self != nullptr);
-        return self->handleStreamRequest(req);
+        camera_fb_t* frame;
+        while (true) {
+            if (frame = esp_camera_fb_get(); frame != nullptr) {
+                pushFrame(frame);
+            }
+        }
     }
 
     static bool
@@ -262,8 +300,26 @@ private:
     }
 
 private:
-    QueueHandle_t _queue{};
-    httpd_handle_t _httpd{};
+    static esp_err_t
+    staticStreamServerHandler(httpd_req_t* req)
+    {
+        Impl* self = static_cast<Impl*>(req->user_ctx);
+        assert(self != nullptr);
+        return self->handleStreamRequest(req);
+    }
+
+    static void
+    staticCaptureFrameHandler(void* data)
+    {
+        Impl* self = static_cast<Impl*>(data);
+        assert(self != nullptr);
+        self->captureFrameHandler();
+    }
+
+private:
+    QueueHandle_t _queueHandle{};
+    httpd_handle_t _streamHandle{};
+    TaskHandle_t _captureHandle{};
 };
 
 LiveStreamer::LiveStreamer()

@@ -2,13 +2,17 @@
 
 ## Dependencies
 
-* esp32-cam driver
+* Platform.io toolkit
+* ESP-IDF (ver. 5.1)
+* ESP32 Camera Driver (git submodule)
 
 ## Build
 
 * Clone repository
+
 ```shell
 $ git clone <url>
+$ cd esp32-cam-live-stream
 $ git submodule update --init --recursive
 ```
 * Generate configuration
@@ -25,7 +29,13 @@ $ pio run -t menuconfig
 * Build
 
 ```shell
-$ pio run -v -e esp32cam
+$ pio run -e esp32cam -v
+```
+
+* Upload
+
+```shell
+$ pio run -e esp32cam -t upload
 ```
 
 ## Camera options
